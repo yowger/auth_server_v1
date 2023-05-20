@@ -73,4 +73,20 @@ authRouter.get("/logout", (req, res) => {
     res.json({ message: "user logout" })
 })
 
+function isAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        next()
+    } else {
+        return res.status(401).json({ message: "unauthorized" })
+    }
+}
+
+authRouter.get("/test", isAuthenticated, function (req, res) {
+    console.log("this is a protected route")
+    res.status(200).json({ message: "this is a protected route" })
+})
+
+// todo persist session
+// todo some functions move to controllers
+
 module.exports = authRouter
