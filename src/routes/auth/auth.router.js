@@ -32,7 +32,13 @@ async function authenticateUser(username, password, done) {
 function serializeUser(user, done) {
     console.log("serializing user: ")
     console.log(user)
-    done(null, user)
+
+    return done(null, {
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        email: user.email,
+    })
 }
 
 function deserializeUser(user, done) {
