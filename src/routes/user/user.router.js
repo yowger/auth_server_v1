@@ -6,6 +6,10 @@ const userValidation = require("../../middleware/validation/user.validation")
 const userRouter = express.Router()
 
 userRouter.get("/", httpGetAllUsers)
+// TODO get one user
+// userRouter.get("/", httpGetUser)
+// TODO delete one user
+// userRouter.get("/", httpDeleteUser)
 
 userRouter.post("/", validate(userValidation), httpRegisterUser)
 

@@ -1,18 +1,13 @@
 const { createUser, getAllUsers } = require("../../model/user/user.model")
 
 async function httpRegisterUser(req, res) {
-    const { username, name, email } = req.body
-
-    if (!username || !name || !email) {
-        return res
-            .status(400)
-            .json({ message: "Missing required user property" })
-    }
+    const { username, name, email, password } = req.body
 
     const userDoc = await createUser({
         username,
         name,
         email,
+        password,
     })
 
     if (userDoc) {

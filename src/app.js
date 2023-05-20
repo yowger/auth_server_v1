@@ -16,7 +16,7 @@ const config = {
 const app = express()
 app.use(express.json())
 
-app.use(helmet())
+// app.use(helmet())
 
 app.use(
     cors({
@@ -28,14 +28,15 @@ app.use(
     expressSession({
         secret: config.COOKIE_KEY_1,
         resave: false,
-        saveUninitialized: false,
-        cookie: { maxAge: 24 * 60 * 60 * 1000, secure: true },
+        saveUninitialized: true,
+        cookie: { maxAge: 60 * 60 * 1000 }, //1 hour
     })
 )
 
-app.use(passport.authenticate("session"))
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.use("/user", userRouter)
-app.use("/", authRouter)
+app.use("/auth", authRouter)
 
 module.exports = app
