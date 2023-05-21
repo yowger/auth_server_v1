@@ -1,16 +1,16 @@
 const express = require("express")
-const { httpGetAllUsers, httpRegisterUser } = require("./user.controller")
-const validate = require("../../middleware/validation/validate")
-const userValidation = require("../../middleware/validation/user.validation")
+const passport = require("passport")
+const { httpGetAllUsers } = require("./user.controller")
 
 const userRouter = express.Router()
 
-userRouter.get("/", httpGetAllUsers)
+userRouter.get(
+    "/",
+    passport.authenticate("jwt", { session: false }),
+    httpGetAllUsers
+)
 // TODO get one user
 // userRouter.get("/", httpGetUser)
 // TODO delete one user
 // userRouter.get("/", httpDeleteUser)
-
-userRouter.post("/", validate(userValidation), httpRegisterUser)
-
 module.exports = userRouter

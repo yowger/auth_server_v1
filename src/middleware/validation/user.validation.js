@@ -6,8 +6,6 @@ const hasOneUpperLetterRegex = /[ -~]*[A-Z][ -~]*/
 const hasOneSpecialCharactersRegex = /[ -~]*(?=[ -~])[^0-9a-zA-Z][ -~]*/
 
 const userValidation = Joi.object().keys({
-    username: Joi.string().required().min(2),
-    name: Joi.string().required().min(2),
     email: Joi.string().required().email(),
     password: Joi.string()
         .required()

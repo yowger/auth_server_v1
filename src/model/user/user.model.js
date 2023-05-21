@@ -1,4 +1,5 @@
 const userDatabase = require("./user.mongo")
+const bcrypt = require("bcrypt")
 
 async function createUser(user) {
     const { username, name, email, password } = user
@@ -27,6 +28,8 @@ async function findUser(filter) {
         __v: 0,
     })
 }
+
+// async matchPassword()
 
 // todo delete user
 
