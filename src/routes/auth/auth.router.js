@@ -25,7 +25,7 @@ authRouter.post(
     function (req, res) {
         jwt.sign(
             { user: req.user },
-            "secretKey",
+            process.env.JWT_SECRET,
             { expiresIn: "1h" },
             function (error, token) {
                 if (error) {
