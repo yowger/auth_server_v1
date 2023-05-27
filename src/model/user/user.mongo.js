@@ -6,18 +6,35 @@ const userSchema = new mongoose.Schema(
     {
         username: {
             type: String,
+            unique: true,
+            required: true,
         },
         name: {
             type: String,
         },
         email: {
             type: String,
+            lowercase: true,
             required: true,
             unique: true,
         },
         password: {
             type: String,
+            trim: true,
+            min: 6,
+            max: 20,
+        },
+        role: {
+            type: String,
+            default: "USER",
+        },
+        provider: {
+            type: String,
             required: true,
+        },
+        googleId: {
+            type: String,
+            unique: true,
         },
     },
     { timestamps: true }
@@ -26,12 +43,16 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
     try {
         const user = this
-        const rounds = 10
+        console.log("🚀 ~ file: user.mongo.js:46 ~ user:", user)
 
-        if (!user.isModified("password")) {
+        const providerIsNotAnEmail = user.provider !== "email"
+        const passwordAlreadyModified = !user.isModified("password")
+
+        if (providerIsNotAnEmail || passwordAlreadyModified) {
             next()
         }
 
+        const rounds = 10
         const hashedPassword = await bcrypt.hash(user.password, rounds)
         user.password = hashedPassword
 

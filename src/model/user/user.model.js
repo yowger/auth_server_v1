@@ -2,9 +2,11 @@ const userDatabase = require("./user.mongo")
 const bcrypt = require("bcrypt")
 
 async function createUser(user) {
-    const { username, name, email, password } = user
+    console.log("create new user in user.model ", user)
+    const { provider, username, name, email, password } = user
 
     const userDoc = new userDatabase({
+        provider,
         username,
         name,
         email,

@@ -1,38 +1,9 @@
 const passport = require("passport")
 const LocalStrategy = require("passport-local").Strategy
+const GoogleStrategy = require("passport-google-oauth20").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
 const ExtractJwt = require("passport-jwt").ExtractJwt
 const { findUser, createUser } = require("../model/user/user.model")
-
-passport.use(
-    "local-signup",
-    new LocalStrategy(
-        {
-            usernameField: "email",
-            passwordField: "password",
-        },
-        async function (email, password, done) {
-            try {
-                console.log("signing up")
-                const userExists = await findUser({ email })
-
-                if (userExists) {
-                    console.log("user exist")
-                    return done(null, false)
-                }
-
-                const user = await createUser({
-                    email,
-                    password,
-                })
-
-                return done(null, user)
-            } catch (error) {
-                done(error)
-            }
-        }
-    )
-)
 
 passport.use(
     "local-login",
@@ -68,10 +39,11 @@ passport.use(
             secretOrKey: process.env.JWT_SECRET,
         },
         async function (jwtPayload, done) {
-            
-            console.log("🚀 ~ file: passport.config.js:71 ~ jwtPayload:", jwtPayload)
+            console.log(
+                "🚀 ~ file: passport.config.js:71 ~ jwtPayload:",
+                jwtPayload
+            )
             try {
-                
                 const user = jwtPayload.user
 
                 const userExists = await findUser({ _id: user.id })
@@ -84,6 +56,48 @@ passport.use(
                 done(null, user)
             } catch (error) {
                 done(error, false)
+            }
+        }
+    )
+)
+
+passport.use(
+    new GoogleStrategy(
+        {
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: "http://localhost:7001/auth/google/callback",
+        },
+        async function (accessToken, refreshToken, profile, done) {
+            console.log("🚀 ~ file: passport.config.js:72 ~ profile:", profile)
+            try {
+                const { sub, name, email } = profile._json
+                const googleId = sub
+                const provider = profile.provider
+                const username = `user${profile.id}`
+
+                const userExists = await findUser({ email })
+
+                if (userExists) {
+                    return done(null, userExists)
+                }
+
+                console.log(
+                    "🚀 ~ file: passport.config.js:114 ~ user:",
+                    userExists
+                )
+
+                const newUser = await createUser({
+                    provider,
+                    googleId,
+                    username,
+                    name,
+                    email,
+                })
+
+                return done(null, newUser)
+            } catch (error) {
+                console.log(error)
             }
         }
     )

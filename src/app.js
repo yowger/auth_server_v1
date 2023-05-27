@@ -2,8 +2,9 @@ const helmet = require("helmet")
 const expressSession = require("express-session")
 const path = require("path")
 const express = require("express")
-const cookieParser = require('cookie-parser')
+const cookieParser = require("cookie-parser")
 const cors = require("cors")
+const corsOptions = require("./services/cors.config")
 const passport = require("passport")
 
 const authRouter = require("./routes/auth/auth.router")
@@ -16,15 +17,11 @@ const config = {
 
 const app = express()
 
+app.use(cors(corsOptions))
+
 app.use(express.json())
 app.use(cookieParser())
 app.use(helmet())
-
-app.use(
-    cors({
-        origin: "http://localhost:6001",
-    })
-)
 
 // app.use(
 //     expressSession({

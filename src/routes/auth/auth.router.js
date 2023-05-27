@@ -2,31 +2,40 @@ const express = require("express")
 const passport = require("passport")
 const jwt = require("jsonwebtoken")
 const authRouter = express.Router()
-const { findUser } = require("../../model/user/user.model")
+const { findUser, createUser } = require("../../model/user/user.model")
 const validate = require("../../middleware/validation/validate")
 const userValidation = require("../../middleware/validation/user.validation")
+const CLIENT_HOME_PAGE_URL = "http://127.0.0.1:5173/"
 
 require("../../services/passport.config")
 
 authRouter.post(
     "/signup",
-    validate(userValidation),
-    passport.authenticate("local-signup", { session: false }),
-    function (req, res) {
-        console.log("come here")
-        console.log("user", req.user)
+    // validate(userValidation),
+    async function (req, res) {
+        try {
+            const { username, name, email, password } = req.body
 
-        // if (error) {
-        //     return res.status(400).json({ error })
-        // }
-        const userExists = req.user
-        console.log("🚀 ~ file: auth.router.js:21 ~ userExists:", userExists)
+            const userExists = await findUser({ email })
 
-        if (!req.user) {
-            return res.status(400).json({ message: "No user found" })
+            if (userExists) {
+                return res.status(422).send({ message: "Email already in use" })
+            }
+
+            const newUser = await createUser({
+                provider: "email",
+                username,
+                name,
+                email,
+                password,
+            })
+
+            console.log("new user ", newUser)
+
+            res.json({ message: "Register success." })
+        } catch (error) {
+            return res.status(400).json({ error })
         }
-
-        return res.status(200).json({ user: req.user })
     }
 )
 
@@ -40,7 +49,7 @@ authRouter.post(
             { user: { id: userId } },
             process.env.JWT_SECRET,
             {
-                expiresIn: "20s",
+                expiresIn: "15m",
             }
         )
 
@@ -53,29 +62,33 @@ authRouter.post(
         const oneDay = 1 * 24 * 60 * 60 * 1000
 
         res.cookie("jwt", refreshToken, {
-            // httpOnly: true,
-            // secure: true,
-            // sameSite: "none",
+            httpOnly: true,
+            secure: true,
+            sameSite: "None",
             maxAge: oneDay,
             // maxAge: 10000,
         })
 
+        console.log("cookies")
+
         res.status(200).json({
-            success: true,
             accessToken,
-            status: "You are successfully logged in.",
         })
     }
 )
 
 authRouter.get("/refresh_token", async function (req, res) {
+    console.log("refresh token user ", req?.user)
     try {
         const cookies = req.cookies
         console.log("🚀 ~ file: auth.router.js:71 ~ cookies:", cookies)
 
         if (!cookies?.jwt) {
-            return res.status(401).json({ message: "Unauthorized" })
+            return res.sendStatus(403)
+            // .json({ message: "Unauthorized" })
         }
+
+        console.log("still going")
 
         const refreshToken = cookies.jwt
 
@@ -96,7 +109,7 @@ authRouter.get("/refresh_token", async function (req, res) {
             { user: { id: userId } },
             process.env.JWT_SECRET,
             {
-                expiresIn: "20s",
+                expiresIn: "15m",
             }
         )
 
@@ -107,13 +120,75 @@ authRouter.get("/refresh_token", async function (req, res) {
     }
 })
 
-authRouter.get("/logout", (req, res) => {
+authRouter.get(
+    "/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+)
+
+authRouter.get(
+    "/google/callback",
+    passport.authenticate("google", {
+        failureRedirect: "/login/failed",
+        session: false,
+    }),
+    function (req, res) {
+        const userId = String(req.user._id)
+        console.log("user ", req?.user)
+        console.log("new user ", req?.newUser)
+
+        const refreshToken = jwt.sign(
+            { userId: userId },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: "1d" }
+        )
+
+        const oneDay = 1 * 24 * 60 * 60 * 1000
+
+        res.cookie("jwt", refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "None",
+            maxAge: oneDay,
+        })
+
+        res.redirect(CLIENT_HOME_PAGE_URL)
+    }
+)
+
+authRouter.get("/login/success", (req, res) => {
+    // if cookies then give access token
+
+    // give access token
+    if (req.user) {
+        res.json({
+            message: "User Authenticated",
+            user: req.user,
+        })
+    } else
+        res.status(400).json({
+            message: "User Not Authenticated",
+            user: null,
+        })
+})
+
+authRouter.get("/login/failed", (req, res) => {
+    res.status(401).json({
+        message: "user failed to authenticate.",
+    })
+})
+
+authRouter.post("/logout", (req, res) => {
+    console.log("logout")
     const cookies = req.cookies
     if (!cookies?.jwt) {
         return res.sendStatus(204)
-    } 
+    }
 
-    res.json({ message: "user logout" })
+    console.log("clear cookie")
+    res.clearCookie("jwt", { httpOnly: true, secure: true, sameSite: "None" })
+    console.log("clear cookie 2")
+
+    res.json({ message: "user successfully logout" })
 })
 
 authRouter.get(

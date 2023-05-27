@@ -6,7 +6,7 @@ const userRouter = express.Router()
 
 userRouter.get(
     "/",
-    passport.authenticate("jwt", { session: false }),
+    // passport.authenticate("jwt", { session: false }),
     httpGetAllUsers
 )
 // TODO get one user
