@@ -1,12 +1,8 @@
 const userDatabase = require("./user.mongo")
-const bcrypt = require("bcrypt")
 
 async function createUser(user) {
     console.log("create new user in user.model ", user)
-    const { provider, username, name, email, password, googleId } = user
-
-    const providerIsGoogle =
-        (provider.toLowerCase() === "google" && googleId) || false
+    const { provider, username, name, email, password } = user
 
     let userObject = {
         provider,
@@ -16,11 +12,26 @@ async function createUser(user) {
         password,
     }
 
-    if (providerIsGoogle) {
-        userObject.googleId = googleId
+    const userDoc = new userDatabase(userObject)
+
+    return await userDoc.save()
+}
+
+async function createGoogleUser(googleUser) {
+    const { provider, googleId, username, name, email, avatar, verified } =
+        googleUser
+
+    const googleUserObject = {
+        provider,
+        googleId,
+        username,
+        name,
+        email,
+        avatar,
+        verified,
     }
 
-    const userDoc = new userDatabase(userObject)
+    const userDoc = new userDatabase(googleUserObject)
 
     return await userDoc.save()
 }
@@ -48,6 +59,7 @@ async function findUser(filter) {
 
 module.exports = {
     createUser,
+    createGoogleUser,
     getAllUsers,
     findUser,
 }

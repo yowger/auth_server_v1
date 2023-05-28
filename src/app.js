@@ -2,7 +2,7 @@ const helmet = require("helmet")
 const express = require("express")
 const cookieParser = require("cookie-parser")
 const cors = require("cors")
-const corsOptions = require("./services/cors.config")
+const corsOptions = require("./services/cors")
 
 const userRouter = require("./routes/user/user.router")
 const authRouter = require("./routes/auth/auth.router")

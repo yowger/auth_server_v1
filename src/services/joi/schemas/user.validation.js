@@ -1,13 +1,13 @@
 const Joi = require("joi")
 
+const usernameFormat = /^[a-zA-Z0-9_-]+$/
+// only lower and upper case letters, numbers and dash and underscore
+
 const passwordFormat = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[\S]{5,}$/
 // 5 or more characters, one uppercase, one lowercase, and one number
 
 const specialCharsFormat = /^[-@.\w]*$/
 // Password cannot contain special characters other than _ @ . -
-
-const usernameRegex = /^[a-zA-Z0-9_-]+$/
-// only lower and upper case letters, numbers and dash and underscore
 
 const userValidation = Joi.object().keys({
     username: Joi.string()
@@ -15,7 +15,7 @@ const userValidation = Joi.object().keys({
         .trim()
         .min(2)
         .max(20)
-        .regex(usernameRegex)
+        .regex(usernameFormat)
         .messages({
             "string.pattern.base":
                 "Only lowercase and uppercase letters, numbers, dashes and underscore are allowed",

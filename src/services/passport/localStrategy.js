@@ -10,18 +10,22 @@ const localStrategy = new LocalStrategy(
             const user = await findUser({ email })
 
             if (!user) {
-                return done(null, false)
+                return done(null, false, {
+                    errors: "email is not registered",
+                })
             }
 
             const matchPassword = await user.matchPassword(password)
 
             if (!matchPassword) {
-                return done(null, false)
+                return done(null, false, {
+                    errors: "invalid password",
+                })
             }
 
             return done(null, user)
         } catch (error) {
-            return done(error, false)
+            return done(error, false, { errors: "error logging in" })
         }
     }
 )

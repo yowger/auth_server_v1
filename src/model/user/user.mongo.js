@@ -6,10 +6,11 @@ const userSchema = new mongoose.Schema(
         username: {
             type: String,
             unique: true,
+            index: true,
             required: true,
             trim: true,
             min: 2,
-            max: 20,
+            max: 50,
         },
         name: {
             type: String,
@@ -20,10 +21,11 @@ const userSchema = new mongoose.Schema(
         },
         email: {
             type: String,
+            unique: true,
+            index: true,
             trim: true,
             lowercase: true,
             required: true,
-            unique: true,
         },
         password: {
             type: String,
@@ -42,6 +44,14 @@ const userSchema = new mongoose.Schema(
         googleId: {
             type: String,
             unique: true,
+            sparse: true,
+        },
+        avatar: {
+            type: String,
+        },
+        verified: {
+            type: Boolean,
+            default: false,
         },
     },
     { timestamps: true }
