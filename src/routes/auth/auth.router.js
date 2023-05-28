@@ -3,41 +3,34 @@ const passport = require("passport")
 const jwt = require("jsonwebtoken")
 const authRouter = express.Router()
 const { findUser, createUser } = require("../../model/user/user.model")
-const validate = require("../../middleware/validation/validate")
-const userValidation = require("../../middleware/validation/user.validation")
-const CLIENT_HOME_PAGE_URL = "http://127.0.0.1:5173/"
+const validate = require("../../middleware/validate")
+const userValidation = require("../../services/joi/schemas/user.validation")
 
-require("../../services/passport.config")
+authRouter.post("/signup", validate(userValidation), async function (req, res) {
+    try {
+        const { username, name, email, password } = req.body
 
-authRouter.post(
-    "/signup",
-    // validate(userValidation),
-    async function (req, res) {
-        try {
-            const { username, name, email, password } = req.body
+        const userExists = await findUser({ email })
 
-            const userExists = await findUser({ email })
-
-            if (userExists) {
-                return res.status(422).send({ message: "Email already in use" })
-            }
-
-            const newUser = await createUser({
-                provider: "email",
-                username,
-                name,
-                email,
-                password,
-            })
-
-            console.log("new user ", newUser)
-
-            res.json({ message: "Register success." })
-        } catch (error) {
-            return res.status(400).json({ error })
+        if (userExists) {
+            return res.status(422).send({ message: "Email already in use" })
         }
+
+        const newUser = await createUser({
+            provider: "email",
+            username,
+            name,
+            email,
+            password,
+        })
+
+        console.log("new user ", newUser)
+
+        res.json({ message: "Register success." })
+    } catch (error) {
+        return res.status(400).json({ error })
     }
-)
+})
 
 authRouter.post(
     "/login",
@@ -120,41 +113,6 @@ authRouter.get("/refresh_token", async function (req, res) {
     }
 })
 
-authRouter.get(
-    "/google",
-    passport.authenticate("google", { scope: ["profile", "email"] })
-)
-
-authRouter.get(
-    "/google/callback",
-    passport.authenticate("google", {
-        failureRedirect: "/login/failed",
-        session: false,
-    }),
-    function (req, res) {
-        const userId = String(req.user._id)
-        console.log("user ", req?.user)
-        console.log("new user ", req?.newUser)
-
-        const refreshToken = jwt.sign(
-            { userId: userId },
-            process.env.REFRESH_TOKEN_SECRET,
-            { expiresIn: "1d" }
-        )
-
-        const oneDay = 1 * 24 * 60 * 60 * 1000
-
-        res.cookie("jwt", refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "None",
-            maxAge: oneDay,
-        })
-
-        res.redirect(CLIENT_HOME_PAGE_URL)
-    }
-)
-
 authRouter.get("/login/success", (req, res) => {
     // if cookies then give access token
 
@@ -199,24 +157,5 @@ authRouter.get(
         res.status(200).json({ message: "this is a protected route" })
     }
 )
-
-// todo persist session
-// todo some functions move to controllers
-
-// function serializeUser(user, done) {
-//     console.log("serializing user: ")
-//     console.log(user)
-//     done(null, user)
-// }
-
-// function deserializeUser(user, done) {
-//     console.log("deserializeUser user: ", user)
-//     return done(null, {
-//         user,
-//     })
-// }
-
-// passport.serializeUser(serializeUser)
-// passport.deserializeUser(deserializeUser)
 
 module.exports = authRouter

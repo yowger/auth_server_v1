@@ -1,4 +1,3 @@
-// done?
 const mongoose = require("mongoose")
 const bcrypt = require("bcrypt")
 
@@ -8,12 +7,20 @@ const userSchema = new mongoose.Schema(
             type: String,
             unique: true,
             required: true,
+            trim: true,
+            min: 2,
+            max: 20,
         },
         name: {
             type: String,
+            required: true,
+            trim: true,
+            min: 2,
+            max: 30,
         },
         email: {
             type: String,
+            trim: true,
             lowercase: true,
             required: true,
             unique: true,
@@ -21,7 +28,7 @@ const userSchema = new mongoose.Schema(
         password: {
             type: String,
             trim: true,
-            min: 6,
+            min: 5,
             max: 20,
         },
         role: {
@@ -43,7 +50,6 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
     try {
         const user = this
-        console.log("🚀 ~ file: user.mongo.js:46 ~ user:", user)
 
         const providerIsNotAnEmail = user.provider !== "email"
         const passwordAlreadyModified = !user.isModified("password")

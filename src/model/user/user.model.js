@@ -3,15 +3,24 @@ const bcrypt = require("bcrypt")
 
 async function createUser(user) {
     console.log("create new user in user.model ", user)
-    const { provider, username, name, email, password } = user
+    const { provider, username, name, email, password, googleId } = user
 
-    const userDoc = new userDatabase({
+    const providerIsGoogle =
+        (provider.toLowerCase() === "google" && googleId) || false
+
+    let userObject = {
         provider,
         username,
         name,
         email,
         password,
-    })
+    }
+
+    if (providerIsGoogle) {
+        userObject.googleId = googleId
+    }
+
+    const userDoc = new userDatabase(userObject)
 
     return await userDoc.save()
 }
