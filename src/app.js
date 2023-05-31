@@ -7,6 +7,7 @@ const corsOptions = require("./services/cors")
 const userRouter = require("./routes/user/user.router")
 const authRouter = require("./routes/auth/auth.router")
 const googleRouter = require("./routes/google/google.router")
+const postRouter = require("./routes/post/post.router")
 
 const app = express()
 
@@ -20,8 +21,9 @@ require("./services/passport/jwtStrategy")
 require("./services/passport/localStrategy")
 require("./services/passport/googleStrategy")
 
-app.use("/user", userRouter)
 app.use("/auth", authRouter)
 app.use("/auth", googleRouter)
+app.use("/user", userRouter)
+app.use("/post", postRouter)
 
 module.exports = app

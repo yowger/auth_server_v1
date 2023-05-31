@@ -5,7 +5,7 @@ const { findUser } = require("../../model/user/user.model")
 
 const jwtStrategy = new JwtStrategy(
     {
-        jwtFromRequest: ExtractJwt.fromHeader("authorization"),
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken("authorization"),
         secretOrKey: process.env.JWT_SECRET,
     },
     async function (jwtPayload, done) {

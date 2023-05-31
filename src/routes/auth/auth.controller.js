@@ -38,10 +38,11 @@ async function httpRegisterUser(req, res) {
 function httpLoginUser(req, res) {
     try {
         console.log("im in logging in")
-        
+
+        const user = req.user
         const userId = String(req.user._id)
 
-        const accessToken = issueAccessToken(userId)
+        const accessToken = issueAccessToken(user)
 
         const refreshToken = issueRefreshToken(userId)
 
@@ -57,34 +58,48 @@ function httpLoginUser(req, res) {
     }
 }
 
+// return res.sendStatus(403)
+
 async function httpRefreshToken(req, res) {
-    console.log("refresh token user ", req?.user)
     try {
+        const { isGuest } = req
+
+        if (isGuest) {
+            return res.json({ accessToken: null })
+        }
+
         const cookies = req.cookies
         const noJwtCookie = !cookies?.jwt
 
         if (noJwtCookie) {
-            return res.sendStatus(403)
+            // return res.status(401).json({ error: "Authentication is required" })
+            return res.sendStatus(401)
         }
 
         const refreshTokenCookie = cookies.jwt
 
-        const decodedJwt = verifyRefreshToken(refreshTokenCookie)
+        try {
+            const decodedJwt = verifyRefreshToken(refreshTokenCookie)
 
-        const userId = decodedJwt.userId
+            const userId = decodedJwt.userId
 
-        const userExists = await findUser({ _id: userId })
+            const userExists = await findUser({ _id: userId })
 
-        if (!userExists) {
-            return res.status(401).json({ message: "Unauthorized" })
+            if (!userExists) {
+                // return res.status(404).json({ error: "User not found" })
+                return res.sendStatus(401)
+            }
+
+            const accessToken = issueAccessToken(userExists)
+
+            res.json({ accessToken })
+        } catch (error) {
+            // return res.status(401).json({ error: "Invalid refresh token" })
+            return res.sendStatus(401)
         }
-
-        const accessToken = issueAccessToken(userId)
-
-        res.json({ accessToken })
     } catch (error) {
-        console.log("🚀 ~ file: auth.router.js:90 ~ error:", error)
-        return res.status(401).json({ message: "Unauthorized" })
+        // return res.status(500).json({ error: "Internal server error" })
+        return res.sendStatus(500)
     }
 }
 

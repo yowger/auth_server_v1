@@ -1,6 +1,8 @@
 const express = require("express")
 const passport = require("passport")
 const authRouter = express.Router()
+const { authPassportLocal } = require("../../middleware/authPassportLocal")
+const guestMiddleware = require("../../middleware/guestMiddleware")
 const validate = require("../../middleware/validate")
 const userValidation = require("../../services/joi/schemas/user.validation")
 const {
@@ -12,31 +14,9 @@ const {
 
 authRouter.post("/signup", validate(userValidation), httpRegisterUser)
 
-authRouter.post(
-    "/login",
-    function (req, res, next) {
-        passport.authenticate(
-            "local-login",
-            { session: false },
-            function (error, user, info) {
-                const errorMessage = info?.errors || null
+authRouter.post("/login", authPassportLocal, httpLoginUser)
 
-                const userNotExist = !user
-
-                if (userNotExist) {
-                    return res.status(401).json({ message: errorMessage })
-                }
-
-                req.user = user
-
-                next()
-            }
-        )(req, res, next)
-    },
-    httpLoginUser
-)
-
-authRouter.get("/refresh_token", httpRefreshToken)
+authRouter.get("/refresh_token", guestMiddleware, httpRefreshToken)
 
 authRouter.post("/logout", httpLogout)
 
@@ -65,13 +45,13 @@ authRouter.post("/logout", httpLogout)
 // })
 
 // test
-// authRouter.get(
-//     "/test",
-//     passport.authenticate("jwt", { session: false }),
-//     function (req, res) {
-//         console.log("this is a protected route")
-//         res.status(200).json({ message: "this is a protected route" })
-//     }
-// )
+authRouter.get(
+    "/test",
+    passport.authenticate("jwt", { session: false }),
+    function (req, res) {
+        console.log("req: ", req.user)
+        res.status(200).json({ message: "this is a protected route" })
+    }
+)
 
 module.exports = authRouter

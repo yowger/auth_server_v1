@@ -33,9 +33,9 @@ const userSchema = new mongoose.Schema(
             min: 5,
             max: 20,
         },
-        role: {
-            type: String,
-            default: "USER",
+        roles: {
+            type: [String],
+            default: ["USER"],
         },
         provider: {
             type: String,

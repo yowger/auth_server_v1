@@ -1,7 +1,21 @@
 const jwt = require("jsonwebtoken")
 
-function issueAccessToken(userId) {
-    return jwt.sign({ user: { id: userId } }, process.env.JWT_SECRET, {
+function issueAccessToken(user) {
+    console.log("🚀 ~ file: jwt.js:4 ~ issueAccessToken ~ user:", user)
+
+    const { _id, username, name, roles, avatar = null } = user
+
+    const accessTokenObject = {
+        user: {
+            id: _id,
+            username,
+            name,
+            roles,
+            avatar,
+        },
+    }
+
+    return jwt.sign(accessTokenObject, process.env.JWT_SECRET, {
         expiresIn: "15m",
     })
 }
