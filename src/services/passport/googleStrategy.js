@@ -1,16 +1,22 @@
 const passport = require("passport")
 const GoogleStrategy = require("passport-google-oauth20").Strategy
 const { findUser, createGoogleUser } = require("../../model/user/user.model")
+const generateRandomUsername = require("../../utils/generateRandomUsername")
 
 async function registerGoogleUser(accessToken, refreshToken, profile, done) {
     try {
         console.log("google profile: ", profile)
-        const { sub, name, given_name, picture, email, email_verified } =
-            profile._json
-        const { provider } = profile
-        const username = `${given_name}${profile.id}`
+        const { sub, name, picture, email, email_verified } = profile._json
+        const username = generateRandomUsername()
 
-        const userExists = await findUser({ email, provider })
+        const provider = {
+            name: "google",
+            id: sub,
+        }
+
+        const filter = { email, "provider.name": "google" }
+
+        const userExists = await findUser(filter)
 
         if (userExists) {
             console.log("google user exist: ", userExists)
@@ -19,7 +25,6 @@ async function registerGoogleUser(accessToken, refreshToken, profile, done) {
 
         const newUser = await createGoogleUser({
             provider,
-            googleId: sub,
             username,
             name,
             email,

@@ -9,6 +9,7 @@ const {
     httpRegisterUser,
     httpLoginUser,
     httpRefreshToken,
+    httpForgotPassword,
     httpLogout,
 } = require("./auth.controller")
 
@@ -17,6 +18,8 @@ authRouter.post("/signup", validate(userValidation), httpRegisterUser)
 authRouter.post("/login", authPassportLocal, httpLoginUser)
 
 authRouter.get("/refresh_token", guestMiddleware, httpRefreshToken)
+
+authRouter.post("/forgot_password", httpForgotPassword)
 
 authRouter.post("/logout", httpLogout)
 

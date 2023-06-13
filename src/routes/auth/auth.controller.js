@@ -1,46 +1,42 @@
-const jwt = require("jsonwebtoken")
 const { findUser, createUser } = require("../../model/user/user.model")
 const {
     issueRefreshToken,
     issueAccessToken,
     verifyRefreshToken,
+    issueResetPasswordToken,
 } = require("../../services/jwt")
+const sendMail = require("../../services/sendMail")
 const { cookieConfig } = require("../../utils/cookieConfig")
+const generateRandomUsername = require("../../utils/generateRandomUsername")
 
 async function httpRegisterUser(req, res) {
     try {
-        console.log("register 1")
         const { username, name, email, password } = req.body
+
+        let assignUsername = username || generateRandomUsername()
+
+        const filter = { email, "provider.name": "regular" }
+
+        const userExists = await findUser(filter)
         console.log(
-            "🚀 ~ file: auth.controller.js:14 ~ httpRegisterUser ~ username, name, email, password:",
-            username,
-            name,
-            email,
-            password
+            "🚀 ~ file: auth.controller.js:21 ~ httpRegisterUser ~ userExists:",
+            userExists
         )
 
-        console.log("register 2")
-        const userExists = await findUser({ email })
-
-        console.log("register 3")
         if (userExists) {
             return res.status(409).send({ message: "Email already in use" })
         }
-        console.log("register 4")
 
         const createdUser = await createUser({
-            provider: "email",
-            username,
+            username: assignUsername,
             name,
             email,
             password,
         })
-        console.log("register 5")
 
         if (!createdUser) {
             return res.status(404).json({ message: "Failed to create user." })
         }
-        console.log("register 6")
 
         res.json({ success: true, message: "Register success." })
     } catch (error) {
@@ -116,6 +112,70 @@ async function httpRefreshToken(req, res) {
     }
 }
 
+async function httpForgotPassword(req, res) {
+    try {
+        const { email } = req.body
+        const filter = { email, "provider.name": "regular" }
+
+        const user = await findUser(filter)
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" })
+        }
+
+        const currentTimestamp = Date.now()
+        const coolDownPeriod = 5 * 60 * 1000
+
+        const lastResetPasswordTimestamp = user.lastResetPasswordTimestamp
+
+        if (
+            lastResetPasswordTimestamp &&
+            currentTimestamp - lastResetPasswordTimestamp < coolDownPeriod
+        ) {
+            console.log(
+                "Please wait for a while before requesting another reset password email."
+            )
+            return res.status(429).json({
+                message:
+                    "Too many reset password requests. Please wait before trying again.",
+            })
+        }
+
+        console.log("im in")
+
+        const resetPasswordToken = issueResetPasswordToken({
+            userId: user._id,
+            email,
+        })
+
+        const tenMinutes = 600000
+        user.resetPasswordToken = resetPasswordToken
+        user.resetPasswordExpiry = Date.now() + tenMinutes
+        user.lastResetPasswordTimestamp = new Date()
+
+        const subject = "Password Reset Request"
+        const message = `Please click on the following link to reset your password: ${process.env.CLIENT_URL}/reset_password/${resetPasswordToken}\n\nIf you did not request this, please ignore this email.`
+
+        const emailSent = await sendMail(email, subject, message)
+
+        if (emailSent) {
+            await user.save()
+
+            return res.status(200).json({
+                success: true,
+                message: "Password reset email sent successfully.",
+            })
+        } else {
+            return res
+                .status(500)
+                .json({ message: "Failed to send password reset email." })
+        }
+    } catch (error) {
+        console.log("Error in httpForgotPassword:", error)
+        return res.status(500).json({ message: "Failed to reset password." })
+    }
+}
+
 function httpLogout(req, res) {
     try {
         const cookies = req.cookies
@@ -141,5 +201,6 @@ module.exports = {
     httpRegisterUser,
     httpLoginUser,
     httpRefreshToken,
+    httpForgotPassword,
     httpLogout,
 }

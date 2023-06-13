@@ -52,9 +52,17 @@ async function deletePost(filter) {
     }
 }
 
+async function deleteManyPosts(filter) {
+    const result = await postDatabase.deleteMany(filter)
+    const deleteCount = result.deletedCount
+
+    return deleteCount
+}
+
 module.exports = {
     createPost,
     getAllPost,
     updatePost,
     deletePost,
+    deleteManyPosts,
 }

@@ -1,3 +1,4 @@
+const { deleteManyPosts } = require("../../model/post/post.model")
 const {
     getAllUsers,
     findUser,
@@ -58,9 +59,9 @@ async function httpDeleteUser(req, res) {
     try {
         const { id: userId } = req.user
 
-        const filter = { _id: userId }
+        const userFilter = { _id: userId }
 
-        const userDeleted = await deleteUser(filter)
+        const userDeleted = await deleteUser(userFilter)
 
         if (!userDeleted) {
             return res.status(404).json({
@@ -68,6 +69,10 @@ async function httpDeleteUser(req, res) {
                 message: "User not found or already deleted.",
             })
         }
+
+        const postFilter = { user: userId }
+
+        await deleteManyPosts(postFilter)
 
         res.status(200).json({
             success: true,

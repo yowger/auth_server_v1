@@ -6,7 +6,7 @@ const localStrategy = new LocalStrategy(
     { usernameField: "email", passwordField: "password" },
     async function (email, password, done) {
         try {
-            const user = await findUser({ email })
+            const user = await findUser({ email, "provider.name": "regular" })
 
             if (!user) {
                 return done(null, false, {

@@ -1,14 +1,10 @@
 const userDatabase = require("./user.mongo")
-const generateRandomUsername = require("../../utils/generateRandomUsername")
 
 async function createUser(user) {
-    const { provider, username, name, email, password } = user
-
-    let assignUsername = username || generateRandomUsername()
+    const { username, name, email, password } = user
 
     const userDoc = new userDatabase({
-        provider,
-        username: assignUsername,
+        username,
         name,
         email,
         password,
@@ -20,12 +16,10 @@ async function createUser(user) {
 }
 
 async function createGoogleUser(googleUser) {
-    const { provider, googleId, username, name, email, avatar, verified } =
-        googleUser
+    const { provider, username, name, email, avatar, verified } = googleUser
 
     const userDoc = new userDatabase({
         provider,
-        googleId,
         username,
         name,
         email,
