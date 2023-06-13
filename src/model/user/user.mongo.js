@@ -6,15 +6,13 @@ const userSchema = new mongoose.Schema(
         username: {
             type: String,
             unique: true,
-            index: true,
-            required: true,
             trim: true,
             min: 2,
             max: 50,
+            index: true,
         },
         name: {
             type: String,
-            required: true,
             trim: true,
             min: 2,
             max: 30,
@@ -81,7 +79,12 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.matchPassword = async function (password) {
     try {
         const user = this
-        return await bcrypt.compare(password, user.password)
+        console.log("🚀 this: ", this)
+        console.log("🚀 password: ", password)
+        console.log("🚀 database password", user.password)
+        const comparedPassword = await bcrypt.compare(password, user.password)
+
+        return comparedPassword
     } catch (error) {
         throw new Error(error)
     }

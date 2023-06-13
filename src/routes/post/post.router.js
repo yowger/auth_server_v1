@@ -1,5 +1,7 @@
 const express = require("express")
 const passport = require("passport")
+const USER_ROLES = require("../../constants/userRoles")
+const checkUserRole = require("../../middleware/checkUserRole")
 const postRouter = express.Router()
 const {
     httpCreateNewPost,
@@ -12,13 +14,24 @@ const {
 postRouter.post(
     "/",
     passport.authenticate("jwt", { session: false }),
+    checkUserRole([USER_ROLES.USER, USER_ROLES.ADMIN]),
     httpCreateNewPost
 )
 
 postRouter.get("/", httpGetAllPost)
 
-postRouter.put("/", httUpdatePost)
+postRouter.put(
+    "/",
+    passport.authenticate("jwt", { session: false }),
+    checkUserRole([USER_ROLES.USER, USER_ROLES.ADMIN]),
+    httUpdatePost
+)
 
-postRouter.delete("/", httpDeletePost)
+postRouter.delete(
+    "/",
+    passport.authenticate("jwt", { session: false }),
+    checkUserRole([USER_ROLES.USER, USER_ROLES.ADMIN]),
+    httpDeletePost
+)
 
 module.exports = postRouter

@@ -14,21 +14,25 @@ async function createPost(post) {
 }
 
 async function getAllPost() {
-    const posts = await postDatabase.find(
-        {},
-        {
-            _id: 0,
-            updatedAt: 0,
-            __v: 0,
-        }
-    )
-
+    const posts = await postDatabase
+        .find(
+            {},
+            {
+                updatedAt: 0,
+                __v: 0,
+            }
+        )
+        .populate("user", "_id username avatar")
+        .sort("-createdAt")
     return posts
 }
 
 async function updatePost(filter, update) {
-    const result = await postDatabase.updateOne(filter, update)
-    const updateSuccessful = result.nModified === 1
+    const { content } = update
+
+    const result = await postDatabase.updateOne(filter, { content })
+
+    const updateSuccessful = result.modifiedCount === 1
 
     if (updateSuccessful) {
         return true

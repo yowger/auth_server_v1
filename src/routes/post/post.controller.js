@@ -7,26 +7,21 @@ const {
 
 async function httpCreateNewPost(req, res) {
     try {
-        console.log("meow 1")
         const { id } = req.user
         const { content } = req.body
-        console.log("meow 2")
-        
+
         const post = {
             userId: id,
             content,
         }
-        console.log("meow 3")
-        
+
         const createdPost = await createPost(post)
-        console.log("meow 4")
-        
+
         if (!createdPost) {
             return res
-            .status(404)
-            .json({ message: "Failed to create post. Post not found." })
+                .status(404)
+                .json({ message: "Failed to create post. Post not found." })
         }
-        console.log("meow 5")
 
         res.status(200).json({ message: "Post created successfully." })
     } catch (error) {
@@ -50,14 +45,18 @@ async function httpGetUserPost(req, res) {
 
 async function httUpdatePost(req, res) {
     try {
-        const { postId } = req.params
-        const { content } = req.body
+        const { id } = req.user
+        const { postId, content } = req.body
 
-        const filter = { _id: postId }
+        const filter = { _id: postId, user: id }
 
         const update = { content }
 
-        await updatePost(filter, update)
+        const postUpdated = await updatePost(filter, update)
+
+        if (!postUpdated) {
+            return res.status(404).json({ message: "Post not found." })
+        }
 
         res.status(200).json({ message: "Post updated successfully." })
     } catch (error) {
@@ -67,11 +66,15 @@ async function httUpdatePost(req, res) {
 
 async function httpDeletePost(req, res) {
     try {
-        const { postId } = req.params
+        const { postId } = req.body
 
         const filter = { _id: postId }
 
-        await deletePost(filter)
+        const postDeleted = await deletePost(filter)
+
+        if (!postDeleted) {
+            return res.status(404).json({ message: "Post not found." })
+        }
 
         res.status(200).json({ message: "Post deleted successfully." })
     } catch (error) {

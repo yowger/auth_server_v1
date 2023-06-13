@@ -10,7 +10,7 @@ async function registerGoogleUser(accessToken, refreshToken, profile, done) {
         const { provider } = profile
         const username = `${given_name}${profile.id}`
 
-        const userExists = await findUser({ email })
+        const userExists = await findUser({ email, provider })
 
         if (userExists) {
             console.log("google user exist: ", userExists)

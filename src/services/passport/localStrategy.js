@@ -6,11 +6,11 @@ const localStrategy = new LocalStrategy(
     { usernameField: "email", passwordField: "password" },
     async function (email, password, done) {
         try {
-            console.log("logging in")
             const user = await findUser({ email })
 
             if (!user) {
                 return done(null, false, {
+                    statusCode: 404,
                     errors: "email is not registered",
                 })
             }
@@ -19,6 +19,7 @@ const localStrategy = new LocalStrategy(
 
             if (!matchPassword) {
                 return done(null, false, {
+                    statusCode: 401,
                     errors: "invalid password",
                 })
             }

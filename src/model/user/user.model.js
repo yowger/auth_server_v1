@@ -1,27 +1,29 @@
 const userDatabase = require("./user.mongo")
+const generateRandomUsername = require("../../utils/generateRandomUsername")
 
 async function createUser(user) {
-    console.log("create new user in user.model ", user)
     const { provider, username, name, email, password } = user
 
-    let userObject = {
+    let assignUsername = username || generateRandomUsername()
+
+    const userDoc = new userDatabase({
         provider,
-        username,
+        username: assignUsername,
         name,
         email,
         password,
-    }
+    })
 
-    const userDoc = new userDatabase(userObject)
+    const createdUser = await userDoc.save()
 
-    return await userDoc.save()
+    return createdUser
 }
 
 async function createGoogleUser(googleUser) {
     const { provider, googleId, username, name, email, avatar, verified } =
         googleUser
 
-    const googleUserObject = {
+    const userDoc = new userDatabase({
         provider,
         googleId,
         username,
@@ -29,37 +31,83 @@ async function createGoogleUser(googleUser) {
         email,
         avatar,
         verified,
-    }
+    })
 
-    const userDoc = new userDatabase(googleUserObject)
+    const createdGoogleUser = await userDoc.save()
 
-    return await userDoc.save()
+    return createdGoogleUser
 }
 
 async function getAllUsers() {
-    return await userDatabase.find(
+    const users = await userDatabase.find(
         {},
         {
             __v: 0,
         }
     )
+
+    return users
 }
 
 async function findUser(filter) {
-    return await userDatabase.findOne(filter, {
+    const foundUser = await userDatabase.findOne(filter, {
         __v: 0,
+        updatedAt: 0,
     })
+
+    return foundUser
 }
 
-// async matchPassword()
+async function updateUser(userId, update) {
+    const { name, username } = update
 
-// todo delete user
+    const usernameExist = await findUser({
+        username,
+        _id: { $ne: userId },
+    })
 
-// toto get one user
+    if (usernameExist) {
+        return {
+            success: false,
+            statusCode: 409,
+            message: "Username already taken",
+        }
+    }
+
+    const filter = { _id: userId }
+
+    const result = await userDatabase.updateOne(filter, {
+        name,
+        username,
+    })
+
+    const updateSuccessful = result.modifiedCount === 1
+
+    if (updateSuccessful) {
+        return {
+            success: true,
+        }
+    } else {
+        return { success: false, statusCode: 404, message: "User not found" }
+    }
+}
+
+async function deleteUser(filter) {
+    const result = await userDatabase.deleteOne(filter)
+    const deleteSuccessful = result.deletedCount === 1
+
+    if (deleteSuccessful) {
+        return true
+    } else {
+        return false
+    }
+}
 
 module.exports = {
     createUser,
     createGoogleUser,
     getAllUsers,
     findUser,
+    updateUser,
+    deleteUser,
 }

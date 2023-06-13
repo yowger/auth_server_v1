@@ -11,16 +11,16 @@ const specialCharsFormat = /^[-@.\w]*$/
 
 const userValidation = Joi.object().keys({
     username: Joi.string()
-        .required()
         .trim()
         .min(2)
         .max(20)
         .regex(usernameFormat)
+        .optional()
         .messages({
             "string.pattern.base":
                 "Only lowercase and uppercase letters, numbers, dashes and underscore are allowed",
         }),
-    name: Joi.string().trim().min(2).max(30).required(),
+    name: Joi.string().trim().min(2).max(30).optional(),
     email: Joi.string().required().email(),
     password: Joi.string()
         .required()

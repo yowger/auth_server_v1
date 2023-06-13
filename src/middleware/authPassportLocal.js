@@ -6,11 +6,13 @@ function authPassportLocal(req, res, next) {
         { session: false },
         function (error, user, info) {
             const errorMessage = info?.errors || null
+            const statusCode = info?.statusCode || 400
+            console.log("🚀 user: ", user)
+            console.log("🚀 info: ", info)
+            console.log("🚀 error: ", error)
 
-            const userNotExist = !user
-
-            if (userNotExist) {
-                return res.status(401).json({ message: errorMessage })
+            if (!user) {
+                return res.status(statusCode).json({ message: errorMessage })
             }
 
             req.user = user

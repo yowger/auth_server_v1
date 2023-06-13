@@ -9,26 +9,45 @@ const { cookieConfig } = require("../../utils/cookieConfig")
 
 async function httpRegisterUser(req, res) {
     try {
+        console.log("register 1")
         const { username, name, email, password } = req.body
+        console.log(
+            "🚀 ~ file: auth.controller.js:14 ~ httpRegisterUser ~ username, name, email, password:",
+            username,
+            name,
+            email,
+            password
+        )
 
+        console.log("register 2")
         const userExists = await findUser({ email })
 
+        console.log("register 3")
         if (userExists) {
-            return res.status(422).send({ message: "Email already in use" })
+            return res.status(409).send({ message: "Email already in use" })
         }
+        console.log("register 4")
 
-        const newUser = await createUser({
+        const createdUser = await createUser({
             provider: "email",
             username,
             name,
             email,
             password,
         })
+        console.log("register 5")
 
-        console.log("new user ", newUser)
+        if (!createdUser) {
+            return res.status(404).json({ message: "Failed to create user." })
+        }
+        console.log("register 6")
 
-        res.json({ message: "Register success." })
+        res.json({ success: true, message: "Register success." })
     } catch (error) {
+        console.log(
+            "🚀 ~ file: auth.controller.js:47 ~ httpRegisterUser ~ error:",
+            error
+        )
         return res
             .status(400)
             .json({ message: "failed to register user", error })
@@ -37,8 +56,6 @@ async function httpRegisterUser(req, res) {
 
 function httpLoginUser(req, res) {
     try {
-        console.log("im in logging in")
-
         const user = req.user
         const userId = String(req.user._id)
 
@@ -48,8 +65,6 @@ function httpLoginUser(req, res) {
 
         res.cookie("jwt", refreshToken, cookieConfig)
 
-        console.log("cookies")
-
         res.status(200).json({
             accessToken,
         })
@@ -57,8 +72,6 @@ function httpLoginUser(req, res) {
         return res.status(401).json({ message: "failed to login" })
     }
 }
-
-// return res.sendStatus(403)
 
 async function httpRefreshToken(req, res) {
     try {
@@ -105,8 +118,6 @@ async function httpRefreshToken(req, res) {
 
 function httpLogout(req, res) {
     try {
-        console.log("logout")
-
         const cookies = req.cookies
         const noJwtCookie = !cookies?.jwt
 
