@@ -133,7 +133,7 @@ async function httpForgotPassword(req, res) {
             currentTimestamp - lastResetPasswordTimestamp < coolDownPeriod
         ) {
             console.log(
-                "Please wait for a while before requesting another reset password email."
+                "Please wait 5 minutes before requesting another reset password email."
             )
             return res.status(429).json({
                 message:
@@ -154,7 +154,8 @@ async function httpForgotPassword(req, res) {
         user.lastResetPasswordTimestamp = new Date()
 
         const subject = "Password Reset Request"
-        const message = `Please click on the following link to reset your password: ${process.env.CLIENT_URL}/reset_password/${resetPasswordToken}\n\nIf you did not request this, please ignore this email.`
+        const resetPasswordLink = `${process.env.CLIENT_URL}/reset_password?token=${resetPasswordToken}`
+        const message = `Please click on the following link to reset your password: <a href="${resetPasswordLink}">Reset Password</a> If you did not request this, please ignore this email.`
 
         const emailSent = await sendMail(email, subject, message)
 
@@ -173,6 +174,48 @@ async function httpForgotPassword(req, res) {
     } catch (error) {
         console.log("Error in httpForgotPassword:", error)
         return res.status(500).json({ message: "Failed to reset password." })
+    }
+}
+
+async function httpVerifyResetPassword(req, res) {
+    try {
+        const resetToken = req.headers.authorization.split(" ")[1]
+        const { newPassword } = req.body
+
+        if (!resetToken) {
+            return res.status(400).json({ error: "Reset token is missing" })
+        }
+
+        if (!newPassword) {
+            return res.status(400).json({ error: "New password is missing" })
+        }
+
+        const filter = { resetPasswordToken: resetToken }
+
+        const user = await findUser(filter)
+
+        if (!user) {
+            return res
+                .status(404)
+                .json({ error: "Invalid or expired reset token." })
+        }
+
+        if (user.resetPasswordExpiry < Date.now()) {
+            return res.status(400).json({ error: "Reset token has expired." })
+        }
+
+        user.password = newPassword
+        user.resetPasswordToken = null
+        user.resetPasswordExpiry = null
+        user.lastResetPasswordTimestamp = undefined
+
+        await user.save()
+
+        return res
+            .status(200)
+            .json({ success: true, message: "Password reset successful." })
+    } catch (error) {
+        return res.sendStatus(204)
     }
 }
 
@@ -202,5 +245,6 @@ module.exports = {
     httpLoginUser,
     httpRefreshToken,
     httpForgotPassword,
+    httpVerifyResetPassword,
     httpLogout,
 }

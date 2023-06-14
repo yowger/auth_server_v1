@@ -10,6 +10,7 @@ const {
     httpLoginUser,
     httpRefreshToken,
     httpForgotPassword,
+    httpVerifyResetPassword,
     httpLogout,
 } = require("./auth.controller")
 
@@ -20,6 +21,8 @@ authRouter.post("/login", authPassportLocal, httpLoginUser)
 authRouter.get("/refresh_token", guestMiddleware, httpRefreshToken)
 
 authRouter.post("/forgot_password", httpForgotPassword)
+
+authRouter.post("/verify_reset_password", httpVerifyResetPassword)
 
 authRouter.post("/logout", httpLogout)
 
