@@ -154,7 +154,7 @@ async function httpForgotPassword(req, res) {
         user.lastResetPasswordTimestamp = new Date()
 
         const subject = "Password Reset Request"
-        const resetPasswordLink = `${process.env.CLIENT_URL}/reset_password?token=${resetPasswordToken}`
+        const resetPasswordLink = `${process.env.CLIENT_URL}/reset_password/${resetPasswordToken}`
         const message = `Please click on the following link to reset your password: <a href="${resetPasswordLink}">Reset Password</a> If you did not request this, please ignore this email.`
 
         const emailSent = await sendMail(email, subject, message)
