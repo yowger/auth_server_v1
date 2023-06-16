@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken")
 
 function issueAccessToken(user) {
-    const { _id, username, name, roles, avatar = null } = user
+    const { _id, username, name, roles, profileImage } = user
     const secretKey = process.env.JWT_SECRET
     const expiresIn = "15m"
 
@@ -11,7 +11,7 @@ function issueAccessToken(user) {
             username,
             name,
             roles,
-            avatar,
+            avatar: profileImage.url,
         },
     }
 

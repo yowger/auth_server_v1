@@ -1,3 +1,12 @@
+const {
+    cloudinary,
+    getCloudinaryUploadOptions,
+} = require("../../services/cloudinary/cloudinary")
+const {
+    getFileDataUrl,
+    sanitizeDataUrl,
+} = require("../../services/jsdom/fileUtils")
+
 const { deleteManyPosts } = require("../../model/post/post.model")
 const {
     getAllUsers,
@@ -21,10 +30,7 @@ async function httpGetUser(req, res) {
         const { id } = req.user
 
         const user = await findUser({ _id: id })
-        console.log(
-            "🚀 ~ file: user.controller.js:18 ~ httpGetUser ~ user:",
-            user
-        )
+        console.log("getting user")
 
         res.status(200).json(user)
     } catch (error) {
@@ -83,9 +89,55 @@ async function httpDeleteUser(req, res) {
     }
 }
 
+async function httpUploadProfileImage(req, res) {
+    try {
+        if (req.fileTypeError) {
+            const errorMessage = req.fileTypeError
+            return res.status(415).json({ error: errorMessage })
+        }
+
+        if (req.fileSizeError) {
+            const errorMessage = req.fileSizeError
+            return res.status(413).json({ error: errorMessage })
+        }
+
+        if (!req.file) {
+            const errorMessage = "No image file provided"
+            return res.status(400).json({ error: errorMessage })
+        }
+
+        const { id: userId } = req.user
+        const user = await findUser({ _id: userId })
+
+        const dataUrl = getFileDataUrl(req.file)
+        const sanitizedDataUrl = sanitizeDataUrl(dataUrl)
+
+        const options = getCloudinaryUploadOptions(user)
+
+        const result = await cloudinary.uploader.upload(
+            sanitizedDataUrl,
+            options
+        )
+
+        user.profileImage = user.profileImage?.publicId
+            ? { ...user.profileImage, url: result.secure_url }
+            : { publicId: result.public_id, url: result.secure_url }
+
+        await user.save()
+
+        res.status(200).json({
+            message: "Profile image updated successfully",
+        })
+    } catch (error) {
+        console.log("error uploading file: ", error)
+        res.status(500).json({ error: "failed to upload profile image" })
+    }
+}
+
 module.exports = {
     httpGetAllUsers,
     httpGetUser,
     httpUpdateUser,
     httpDeleteUser,
+    httpUploadProfileImage,
 }

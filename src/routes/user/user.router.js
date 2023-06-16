@@ -3,11 +3,13 @@ const passport = require("passport")
 const USER_ROLES = require("../../constants/userRoles")
 const checkUserRole = require("../../middleware/checkUserRole")
 const userRouter = express.Router()
+const { upload } = require("../../services/multer/multer")
 const {
     httpGetAllUsers,
     httpGetUser,
     httpUpdateUser,
     httpDeleteUser,
+    httpUploadProfileImage,
 } = require("./user.controller")
 
 userRouter.get(
@@ -35,6 +37,14 @@ userRouter.delete(
     passport.authenticate("jwt", { session: false }),
     checkUserRole([USER_ROLES.USER]),
     httpDeleteUser
+)
+
+userRouter.post(
+    "/upload_profile_image",
+    passport.authenticate("jwt", { session: false }),
+    checkUserRole([USER_ROLES.USER]),
+    upload.single("file"),
+    httpUploadProfileImage
 )
 // TODO delete one user
 // userRouter.get("/", httpDeleteUser)

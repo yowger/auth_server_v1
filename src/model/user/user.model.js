@@ -16,14 +16,17 @@ async function createUser(user) {
 }
 
 async function createGoogleUser(googleUser) {
-    const { provider, username, name, email, avatar, verified } = googleUser
+    const { provider, username, name, email, profileImageUrl, verified } =
+        googleUser
 
     const userDoc = new userDatabase({
         provider,
         username,
         name,
         email,
-        avatar,
+        profileImage: {
+            url: profileImageUrl,
+        },
         verified,
     })
 
@@ -53,7 +56,7 @@ async function findUser(filter) {
 }
 
 async function updateUser(userId, update) {
-    const { name, username } = update
+    const { name, username, avatar } = update
 
     const usernameExist = await findUser({
         username,
@@ -73,6 +76,7 @@ async function updateUser(userId, update) {
     const result = await userDatabase.updateOne(filter, {
         name,
         username,
+        avatar,
     })
 
     const updateSuccessful = result.modifiedCount === 1

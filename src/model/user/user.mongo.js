@@ -49,9 +49,15 @@ const userSchema = new mongoose.Schema(
                 sparse: true,
             },
         },
-        avatar: {
-            type: String,
-            default: null,
+        profileImage: {
+            publicId: {
+                type: String,
+                default: null,
+            },
+            url: {
+                type: String,
+                default: null,
+            },
         },
         verified: {
             type: Boolean,

@@ -28,7 +28,7 @@ async function registerGoogleUser(accessToken, refreshToken, profile, done) {
             username,
             name,
             email,
-            avatar: picture,
+            profileImageUrl: picture,
             verified: email_verified,
         })
 

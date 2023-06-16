@@ -9,11 +9,6 @@ const jwtStrategy = new JwtStrategy(
         secretOrKey: process.env.JWT_SECRET,
     },
     async function (jwtPayload, done) {
-        console.log(
-            "🚀 ~ file: passport.config.js:71 ~ jwtPayload:",
-            jwtPayload
-        )
-
         try {
             const user = jwtPayload.user
 
@@ -23,7 +18,6 @@ const jwtStrategy = new JwtStrategy(
                 done(null, false)
             }
 
-            console.log("🚀 ~ file: auth.router.js:109 ~ user:", user)
             done(null, user)
         } catch (error) {
             done(error, false)

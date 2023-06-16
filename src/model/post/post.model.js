@@ -22,7 +22,7 @@ async function getAllPost() {
                 __v: 0,
             }
         )
-        .populate("user", "_id username avatar")
+        .populate("user", "_id username profileImage.url")
         .sort("-createdAt")
     return posts
 }
