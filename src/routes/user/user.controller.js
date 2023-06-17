@@ -2,11 +2,6 @@ const {
     cloudinary,
     getCloudinaryUploadOptions,
 } = require("../../services/cloudinary/cloudinary")
-const {
-    getFileDataUrl,
-    sanitizeDataUrl,
-} = require("../../services/jsdom/fileUtils")
-
 const { deleteManyPosts } = require("../../model/post/post.model")
 const {
     getAllUsers,
@@ -14,6 +9,10 @@ const {
     updateUser,
     deleteUser,
 } = require("../../model/user/user.model")
+const {
+    resizeAndCompressImage,
+} = require("../../services/sharp/imageProcessing")
+const { getImageDataUrl } = require("../../services/uriParser/imageDataUrl")
 
 async function httpGetAllUsers(req, res) {
     try {
@@ -89,6 +88,29 @@ async function httpDeleteUser(req, res) {
     }
 }
 
+// function resizeAndCompressImage(imageBuffer, options = {}) {
+//     const {
+//         width = 300,
+//         height = 300,
+//         fit = "cover",
+//         position = "center",
+//         quality = 80,
+//     } = options
+
+//     return sharp(imageBuffer)
+//         .resize({ width, height, fit, position })
+//         .jpeg({ quality })
+//         .toBuffer()
+// }
+
+// const getImageDataUrl = (buffer, format) => {
+//     const parser = new DatauriParser()
+//     parser.format(format, buffer)
+//     const imageDataUrl = parser.content
+
+//     return imageDataUrl
+// }
+
 async function httpUploadProfileImage(req, res) {
     try {
         if (req.fileTypeError) {
@@ -101,7 +123,7 @@ async function httpUploadProfileImage(req, res) {
             return res.status(413).json({ error: errorMessage })
         }
 
-        if (!req.file) {
+        if (!req.file || !req.file.buffer) {
             const errorMessage = "No image file provided"
             return res.status(400).json({ error: errorMessage })
         }
@@ -109,16 +131,29 @@ async function httpUploadProfileImage(req, res) {
         const { id: userId } = req.user
         const user = await findUser({ _id: userId })
 
-        const dataUrl = getFileDataUrl(req.file)
-        const sanitizedDataUrl = sanitizeDataUrl(dataUrl)
+        const imageBuffer = req.file.buffer
+
+        const PROFILE_IMAGE_OPTIONS = {
+            width: 300,
+            height: 300,
+            fit: "cover",
+            position: "center",
+            quality: 80,
+        }
+
+        const compressedImageBuffer = await resizeAndCompressImage(
+            imageBuffer,
+            PROFILE_IMAGE_OPTIONS
+        )
+
+        const imageDataUrl = getImageDataUrl(compressedImageBuffer, ".png")
 
         const options = getCloudinaryUploadOptions(user)
 
-        const result = await cloudinary.uploader.upload(
-            sanitizedDataUrl,
-            options
-        )
+        const result = await cloudinary.uploader.upload(imageDataUrl, options)
 
+        // if users profile image has public id then only update public id,
+        // else  update public id and url, at default both are empty
         user.profileImage = user.profileImage?.publicId
             ? { ...user.profileImage, url: result.secure_url }
             : { publicId: result.public_id, url: result.secure_url }

@@ -15,11 +15,13 @@ function getCloudinaryUploadOptions(user) {
     const options = {
         unique_filename: true,
         overwrite: true,
-        folder: `auth/${user._id}/profile_image`,
     }
 
+    // if user has profile image public id then update cloudinary image
     if (user.profileImage && user.profileImage.publicId) {
         options.public_id = user.profileImage.publicId
+    } else {
+        options.folder = `auth/${user._id}/profile_image`
     }
 
     return options

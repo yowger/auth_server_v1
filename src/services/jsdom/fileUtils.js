@@ -1,12 +1,13 @@
+// update in future for future messaging system
 const createDOMPurify = require("dompurify")
 const { JSDOM } = require("jsdom")
 
 const window = new JSDOM("").window
 const DOMPurify = createDOMPurify(window)
 
-function getFileDataUrl(file) {
-    const fileBufferString = file.buffer.toString("base64")
-    return `data:${file.mimetype};base64,${fileBufferString}`
+function getFileDataUrl(fileBuffer, fileMimeType) {
+    const fileBufferString = fileBuffer.toString("base64")
+    return `data:${fileMimeType};base64,${fileBufferString}`
 }
 
 const sanitizeDataUrl = (dataUrl) => {
